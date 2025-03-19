@@ -1,0 +1,13 @@
+#include "ff.itp"
+#include "emim.itp"
+#include "alcl4.itp"
+#include "alcl3.itp"
+#include "al2.itp"
+#include "dfbn.itp"
+
+[ system ]        
+emim alcl4
+   
+[ molecules ]     
+emim                 1
+alcl4                1

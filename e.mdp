@@ -1,0 +1,19 @@
+; MINIMIZATION RUN (minim.mdp)
+;(used as input into grompp to generate em.tpr)
+;
+; Parameters describing what to do, when to stop, and what to save
+integrator = md
+nsteps = 0
+nstlog      = 1		   ;print every energy in log file
+nstxout	    = 500	   ;save every 50 frame the xyz in trr
+
+;ELECTROSTATIC AND VDWAALS
+; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
+nstlist         = 1         ; Frequency to update the neighbor list and long range forces
+cutoff-scheme   = Verlet    ; Buffered neighbor searching
+ns_type         = grid      ; Method to determine neighbor list (simple, grid)
+coulombtype     = PME       ; Treatment of long range electrostatic interactions
+rcoulomb        = 9       ; Short-range electrostatic cut-off (nm)
+rvdw            = 9       ; Short-range Van der Waals cut-off (nm)
+pbc             = xyz       ; Periodic Boundary Conditions in all 3 dimensions
+
