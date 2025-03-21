@@ -295,4 +295,5 @@ def clean(lista):
 
 #---------------------------------
 obj = coord()
-obj.only_analysis()
+#if only analysis
+#obj.only_analysis()
