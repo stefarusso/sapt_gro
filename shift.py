@@ -7,27 +7,26 @@ import subprocess
 
 class coord():
     def __init__(self):
+        self.atom1, self.atom2 = [], []
+        self.x, self.y, self.z = [], [], []
+        self.res_number = []
+        self.blank = []
+        self.atoms = []
+        self.res_name = []
+        self.atom_name = []
+        self.atom_n = []
+        self.cell = []
+        self.deltax, self.deltay, self.deltaz, self.norm = [], [], [], []
         if len(sys.argv) > 2:
+            # python shift file.gro N_steps
             self.n = int(sys.argv[2])
-            #self.step = int(sys.argv[3])
-            #self.s = self.s/self.step
             self.filename_gro = sys.argv[1]
-            self.atom1, self.atom2 = [],[]
-            self.x, self.y, self.z = [],[],[]
-            self.res_number = []
-            self.blank = []
-            self.atoms = []
-            self.res_name = []
-            self.atom_name = []
-            self.atom_n = []
-            self.cell =[]
-            self.deltax, self.deltay, self.deltaz, self.norm = [],[],[],[]
-            self.data = []
             self.load()
             self.save_all()
-            self.data = pandas.DataFrame(self.data, columns=["Distance","Total_opls","Coulomb_opls","LJ_opls","Total_sapt","Coulomb_sapt","LJ_sapt"] )
             self.analysis()
         else:
+            #if only python shift
+            #is give as command only analysis is done
             print("Format Required : python script.py file.gro N_steps/2")
     def load(self):
         with open(self.filename_gro) as file:
@@ -178,8 +177,8 @@ class coord():
         #data extraction
         TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ= self.extract('md.log',f'{d_name:.1f}.out')
         os.chdir(cwd)
-        self.data.append([ d*10, TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ]) #kj, kcal
     def save_all(self):
+        self.data = []
         self.input_info = self.ask_charge()
         d=self.norm
         s=d/self.n
@@ -196,6 +195,8 @@ class coord():
             d=d-s #for the name
             self.save(-shift,d,self.deltax,self.deltay,self.deltaz)
             shift += s
+        self.data.append([d * 10, TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ])  # kj, kcal
+        self.data = pandas.DataFrame(self.data,columns=["Distance", "Total_opls", "Coulomb_opls", "LJ_opls", "Total_sapt","Coulomb_sapt", "LJ_sapt"])
     def extract(self, filename_gro,filename_psi):
         with open(filename_psi) as f_psi, open(filename_gro) as f_gro:
             line_found = False
@@ -246,6 +247,20 @@ class coord():
         self.data = df
         df.to_csv('E.txt', index=False)
 
+    # if Psi4 already done
+    def only_analysis(self):
+        directories = clean(os.listdir())
+        dati = []
+        for d in directories:
+            file_gro = f'{d}/md.log'
+            file_psi = f'{d}/{d}.out'
+            TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ = self.extract(file_gro, file_psi)
+            dati.append([d, TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ])
+            # print(dati)
+        self.data = pandas.DataFrame(dati, columns=["Distance", "Total_opls", "Coulomb_opls", "LJ_opls", "Total_sapt","Coulomb_sapt", "LJ_sapt"])
+        self.analysis()
+        print(self.data)
+
 def execute(string,timeout):
     p = subprocess.Popen(string)
     try:
@@ -265,5 +280,19 @@ def print_sum(string,results):
     matches = [ i for i in results.keys() if string in i]
     return sum([results[i] for i in matches])
 
+def clean(lista):
+    tmp = []
+    for element in lista:
+        try:
+            i = float(element)
+        except ValueError:
+            continue
+        if i:
+            tmp.append(i)
+    return tmp
+
+
+
+#---------------------------------
 obj = coord()
-print(obj.data)
+obj.only_analysis()
