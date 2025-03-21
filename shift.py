@@ -1,6 +1,7 @@
 import sys
 import os
 import pandas
+import subprocess
 #python shift.py final.gro steps
 # in the directory itp top mdp files are required
 
@@ -166,12 +167,14 @@ class coord():
             f_gro.write(cell)
         
         #Gromacs Single Point
-        os.system('gmx grompp -f e.mdp -c '+f'{d_name:.1f}/{d_name:.1f}.gro'+' -p topol.top -o '+f'{d_name:.1f}/e.tpr > {d_name:.1f}/gromacs.log')
+        os.system('gmx grompp -f e.mdp -c '+f'{d_name:.1f}/{d_name:.1f}.gro'+' -p topol.top -o '+f'{d_name:.1f}/e.tpr -maxwarn 10  > {d_name:.1f}/gromacs.log ')
         cwd = os.getcwd()
         os.chdir(cwd + f'/{d_name:.1f}')
         os.system('gmx mdrun -s e.tpr >> gromacs.log')
         #Sapt PSI4 procedute
-        os.system(f'psi4 {d_name:.1f}.psi >> psi4.log')
+        command = ['/Users/stefano/anaconda3/bin/psi4', f'{d_name:.1f}.psi']
+        execute(command,3600)
+        #os.system(f'psi4 {d_name:.1f}.psi >> psi4.log')
         #data extraction
         TOTAL, Q, LJ, psi_TOTAL, psi_Q, psi_LJ= self.extract('md.log',f'{d_name:.1f}.out')
         os.chdir(cwd)
@@ -242,6 +245,13 @@ class coord():
         df.Coulomb_sapt += - df.Coulomb_sapt.iloc[-1]
         self.data = df
         df.to_csv('E.txt', index=False)
+
+def execute(string,timeout):
+    p = subprocess.Popen(string)
+    try:
+            p.wait(timeout)
+    except subprocess.TimeoutExpired:
+            p.kill()
 
 def new_line(f,header,values):
     line = f.readline().strip('\n')
